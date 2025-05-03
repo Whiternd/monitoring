@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: ingest
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - json-net
+
+  app:
+    build: .
+    container_name: json-ingest-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_DSN=postgres://postgres:secret@postgres:5432/ingest?sslmode=disable
+      - FORWARD_URLS=https://webhook.site/a1c813f4-595f-4f34-b144-cf8ee36c5c8a
+    restart: always
+    networks:
+      - json-net
+
+volumes:
+  pgdata:
+
+networks:
+  json-net:
+    name: json-net
